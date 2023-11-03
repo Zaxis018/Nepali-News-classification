@@ -1,0 +1,194 @@
+import numpy as np
+import os
+from flask import Flask, request, render_template, session
+from urllib.parse import urlparse
+import sys
+from flask import make_response
+from flask import jsonify
+from newspaper import Article
+
+from bs4 import BeautifulSoup
+import requests
+
+news_ss = []
+
+app = Flask(__name__)
+
+
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/home', methods=['GET', 'POST'])
+def predicting_news():
+    if request.form.get('submit'):
+      url = request.form.get('url')       
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    text = ''
+    for p in soup.find_all('p'):
+        text += p.text
+    words = text.split()
+    if len(words) > 600:
+        words = words[:600]
+    text = " ".join(words)
+    article = Article(url)
+    article.download()
+    article.parse()
+    title = article.title
+    publish_date = article.publish_date
+    authors = article.authors
+    return render_template('index.html',title = title,text = text,publish_date = publish_date,authors = authors)
+
+@app.route('/check_news')
+def check():
+    Prediction = ''
+    return render_template('check_news.html', Prediction = Prediction)
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/contact')
+def contact():
+    
+    return render_template('contact.html')
+
+@app.route('/check', methods=['GET', 'POST'])
+def check_news():
+    if request.form.get('check'):
+        userAgent = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3')
+        news_title = request.form.get('title')
+        global news_ss
+        news_ss.clear()
+        non_base_links = []
+        search = news_title
+        googleText, googleLink = Google(search, userAgent)
+        
+        non_similar_titles=[]
+        googleLinks = googleLink
+        title_similarw = []
+        base_urls = []
+        for link in googleLinks:
+            parsed_uri = urlparse(link)
+            base_url = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+            base_urls.append(base_url)
+            non_base_links.append(link)
+        
+        
+
+       
+
+        def cosine_similarity(a, b):
+            dot_product = np.dot(a, b)
+            norm_a = np.linalg.norm(a)
+            norm_b = np.linalg.norm(b)
+            return dot_product / (norm_a * norm_b)
+        
+        def jaccard_similarity(a, b):
+            seta = set(a)
+            setb = set(b)
+            intersection = seta.intersection(setb)
+            union = seta.union(setb)
+            return len(intersection)/ len(union)
+
+        # Find the cosine similarity between two titles using BERT
+        def cosine_similarity_using_bert(title1, title2):
+            # Preprocess the two titles using BERT preprocessor
+            title1_encoded = get_sentence_embeding([title1])[0]
+            title2_encoded = get_sentence_embeding([title2])[0]
+
+            # Compute the cosine similarity between the encoded titles
+            similarity = cosine_similarity(title1_encoded, title2_encoded)
+            return similarity
+
+        # The title which is used to compare the similarity between all the searched results
+        query_title = search
+
+        # The list of searched results
+        news_titles = googleText
+
+        # The list of trusted websites
+        trusted_websites = ["https://ekantipur.com/", "https://annapurnapost.com/", "https://www.onlinekhabar.com/",
+                            "https://gorkhapatraonline.com/", "https://www.setopati.com/",
+                            "https://www.ratopati.com/category/main-news", "https://nagariknews.nagariknetwork.com/",
+                            "https://www.nayapatrikadaily.com/", "https://www.bbc.com/nepali"]
+
+        # List to store the similar news title
+        similar_titles = []
+
+        # Iterating over each searched result to check the similarity
+        for i, title in enumerate(news_titles):
+            # Compute the cosine similarity between the query title and the current title
+            sim,jac_sim = cosine_similarity_using_bert(query_title, title),jaccard_similarity(query_title,title)
+            if sim >= 0.7 and jac_sim>=0.5:
+                title_similarw.append(title)
+                non_similar_titles.append(non_base_links[i])
+                # Check if the news is from trusted website
+                if base_urls[i] in trusted_websites:
+                    # Adding the news title to the list if the similarity is greater than 0.7 and news is from trusted website
+                    similar_titles.append(title)
+
+        # Printing the list of similar news titles
+        print("Similar titles: ", similar_titles)
+        
+        news_ss.extend(non_similar_titles)
+        # List to store the trusted websites
+        trusted_websites_list = []
+
+        # Iterating over each news title
+        for title in similar_titles:
+            # Finding the index of the title in the list of searched results
+            index = news_titles.index(title)
+
+            # Adding the base URL to the list of trusted websites
+            trusted_websites_list.append(base_urls[index])
+
+        # Printing the list of trusted websites where the news is available
+        print("Trusted websites: ", trusted_websites_list)
+
+        if len(similar_titles) != 0 and len(trusted_websites_list) != 0:
+            Prediction = "True News"
+            return render_template('check_news.html',Prediction = Prediction)
+        else:
+            Prediction = "News not found on trusted websites. Please enter the news description and click the predict button to run BERT model and to check authenticity of the news."
+            return render_template('check_news.html',Prediction = Prediction)
+              
+                    
+@app.route('/source', methods=['POST'])
+def source89():
+    if request.form.get('source'):
+        Prediction = "News not found on trusted websites."
+        return render_template('check_news.html',Prediction = Prediction,news_ss = news_ss)
+                
+            
+            
+  
+
+
+        
+        
+            
+
+
+@app.route('/predict', methods=['POST'])
+def predict_news():
+    if request.form.get('predict'):
+      news_description = request.form.get('description')
+        
+    def get_prediction(news_description):
+        probability = loaded_model.predict([news_description])
+
+        if probability > 0.5:
+            Prediction = "Fake News"
+        else:
+            Prediction = "True News"
+        return render_template('check_news.html',Prediction = Prediction)
+        
+        
+    
+    return get_prediction(news_description)
+
+if __name__ == "__main__":
+    app.run()

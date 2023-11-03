@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fake News Detector</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <script src="https://kit.fontawesome.com/2381bda829.js" crossorigin="anonymous"></script>
+</head>
+<style>
+    .container {
+        background-color: #2c98f7;
+        max-width: 1400px;
+        height: 320px;
+    }
+
+    .button {
+        margin-top: 25px;
+    }
+
+    .input {
+        width: 50%;
+        margin-left: 340px;
+        margin-top: 500px;
+    }
+
+    .text-end {
+        margin-left: 1000px;
+    }
+
+    .icons .fa {
+        margin: 0 13px;
+        cursor: pointer;
+        padding: 18px 0;
+    }
+
+    .fake {
+        height: 50vh;
+        width: 100%;
+        margin-top: 50px;
+        background-position: center;
+        background-size: cover;
+    }
+
+    .about {
+        width: 75%;
+        height: 175px;
+        position: relative;
+        margin: 6% auto;
+        background: #f9f0f0;
+        padding: 5px;
+        text-align: center;
+    }
+
+    .blog {
+        margin-left: 74px;
+        width: 90%;
+    }
+
+    #verify {
+        margin-left: 530px;
+    }
+
+    .result {
+        width: 800px;
+        position: relative;
+        margin: 6% auto;
+        background: #f9f0f0;
+        padding: 5px;
+        text-align: center;
+    }
+</style>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link " aria-current="page" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/check_news">Check News</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">About</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="fake">
+        <img src="{{url_for('static',filename='photos/fakenews.jpg')}}" class="d-block w-100" alt="...">
+    </div>
+
+    <div class="input">
+        <form method="post" action="/check">
+            <label for="title" class="form-label">News Title</label><br>
+            <input type="text" name="title" class="form-control" aria-describedby="emailHelp"><br><br>
+
+            <input type="submit" name="check" value="Check" class="btn btn-primary"><br><br>
+        </form>
+
+        <form method="post" action="/predict">
+            <label for="description" class="form-label">News Description</label><br>
+            <textarea name="description" class="form-control" rows="5" cols="80"></textarea><br><br>
+            <input type="submit" name="predict" value="Predict" class="btn btn-primary"><br><br>
+        </form> 
+    </div>
+
+    <div class="result">
+        <h1>RESULT</h1>
+        <h2>{{Prediction}} </h2>
+        
+        <form method="post" action="/source">
+            <input type="submit" name="source" value="View Sources"><br><br>
+          </form>
+            
+            <ul>
+                {% for url in news_ss %}
+                    <li><a href="{{ url }}">{{ url }}</a></li>
+                {% endfor %}
+            </ul>
+        
+        
+
+
+    </div>
+    <div class="about">
+        <h1>About Us</h1>
+        <p>This is a project developed by the students of Thapathali Campus as their minor project. Due to the increment
+            of fake news on different social media platform and lack of tools for Nepali text based news, we got our
+            motivation to develop our project</p>
+    </div>
+    <div class="blog">
+        <div class="row mb-2">
+            <div class="col-md-6">
+                <div
+                    class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                    <div class="col p-4 d-flex flex-column position-static">
+                        <h3 class="mb-0">Fake News</h3>
+                        <p class="card-text mb-auto">Fake news refers to fabricated or intentionally misleading
+                            information presented as if it were real news. This can take many forms, including false
+                            stories, rumors, conspiracy theories, and manipulated images or videos.</p>
+                        <a href="https://en.wikipedia.org/wiki/Fake_news" class="stretched-link">Continue reading</a>
+                    </div>
+                    <div class="col-auto d-none d-lg-block">
+                        <img class="bd-placeholder-img" width="200" height="275"
+                            src="{{url_for('static',filename='photos/image1.jpg')}}" alt="">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div
+                    class="row g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                    <div class="col p-4 d-flex flex-column position-static">
+                        <h3 class="mb-0">Clickbait</h3>
+                        <p class="mb-auto">Clickbait refers to online content like headlines, images or videos that is
+                            designed to grab the reader's attention and entice them to click on link to the page. The
+                            content often uses sensational language or provocative images to generate interest, even if
+                            the content itself is not informative.</p>
+                        <a href="https://en.wikipedia.org/wiki/Clickbait" class="stretched-link">Continue reading</a>
+                    </div>
+                    <div class="col-auto d-none d-lg-block">
+                        <img class="bd-placeholder-img" width="200" height="275"
+                            src="{{url_for('static',filename='photos/image2.jpg')}}" alt="">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <footer class="row row-cols-1 row-cols-sm-2 row-cols-md-5 py-5 my-5 border-top">
+            <div class="col mb-3">
+                <h3>Fake News Detector</h3>
+                <p>Here you can classify the news as fake or real</p>
+                <div class="icons">
+                    <i class="fa fa-facebook"></i>
+                    <i class="fa fa-instagram"></i>
+                    <i class="fa fa-linkedin"></i>
+                </div>
+            </div>
+
+            <div class="col mb-3">
+
+            </div>
+
+            <div class="col mb-3">
+
+            </div>
+
+            <div class="col mb-3">
+
+            </div>
+
+            <div class="col mb-3">
+                <h5>Section</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">Home</a></li>
+                    <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">Features</a></li>
+                    <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">FAQs</a></li>
+                    <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">About</a></li>
+                </ul>
+
+            </div>
+
+        </footer>
+    </div>
+</body>
+
+</html>
